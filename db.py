@@ -1,9 +1,13 @@
 import psycopg2
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
 
 def get_connection():
     return psycopg2.connect(
         host="localhost",
         database="cs480",
         user="postgres",
-        password="yourpassword" # Each person needs to replace this with their password
+        password=os.getenv("DB_PASSWORD")
     )
