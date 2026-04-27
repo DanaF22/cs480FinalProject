@@ -38,3 +38,17 @@ def managerLogin(ssn):
         print(result[0], "you are successfully registered!")
     else:
         print("Error. No manager exists with this SSN")
+
+def findAvailableRooms():
+    inputStartDate = input("Enter Start Date (mm/dd/yyyy): ")
+    inputEndDate = input("Enter End Date (mm/dd/yyyy): ")
+
+    return
+
+#client books specific room based on date range
+def bookSpecificRoom():
+
+    return
+
+def automaticBooking():
+    return
