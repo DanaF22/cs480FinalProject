@@ -225,6 +225,7 @@ def totalAmountSpent():
         print("Client's name:", i[0])
         print("Total amount spent:", i[1])
         print("-------------------------")
+        
 def findAvailableRooms():
     inputStartDate = input("Enter Start Date (mm/dd/yyyy): ")
     inputEndDate = input("Enter End Date (mm/dd/yyyy): ")
