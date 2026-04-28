@@ -1,7 +1,7 @@
 # This file serves as the main menu where managers 
 # and clients can either register or login
 
-from db import get_connection, managerRegister
+from db import get_connection, managerRegister, clientRegister, clientLogin, updateClientInfo, viewBookings, submitReview
 import manager_menu
 
 def main():
@@ -23,7 +23,7 @@ def main():
             email = input("Enter email: ").strip()
             managerRegister(name, ssn, email)
 
-        # Verify Login
+        # Verify Manager Login
         elif choice == "2":
             ssn = input("Enter SSN: ").strip()
             conn = get_connection()
@@ -33,20 +33,95 @@ def main():
             cur.close()
             conn.close()
 
-            # Succesful login goes to manager submenu
+            # Successful login goes to manager submenu
             if result:
                 print(f"\nWelcome, {result[0]}!")
                 manager_menu.run(ssn)
             else:
                 print("No manager found with that SSN.")
 
-        # ***Client Menu options will beign here***
+        #registers a client
         elif choice == "3":
-            print("placeholder")
-        
-        elif choice == "4":
-            print("placeholder")
+            #retrieves their name and email
+            name = input("Enter name: ").strip()
+            email = input("Enter email: ").strip()
 
+            addresses = []
+            #retrieves their addresses
+            number_addresses = int(input("How many addresses do you want to add? "))
+            for i in range(number_addresses):
+                street_name = input("Enter street name: ").strip()
+                number = input("Enter street number: ").strip()
+                city = input("Enter city: ").strip()
+                addresses.append({'street_name': street_name, 'num': number, 'city': city})
+            
+            cards = []
+            #retrieves their credit card information
+            number_cards = int(input("How many credit cards do you want to add? "))
+            for i in range(number_cards):
+                card_number = input("Enter card number: ").strip()
+                street_name = input("Enter billing street name: ").strip()
+                number = input("Enter billing street number: ").strip()
+                city = input("Enter billing city: ").strip()
+                cards.append({'credit_card_number': card_number, 'street_name': street_name, 'num': number, 'city': city})
+            
+            clientRegister(name, email, addresses, cards)
+
+        #login for clients, if successful goes to client submenu
+        elif choice == "4":
+            email = input("Enter client email: ").strip()
+            
+            #check if client exists
+            if clientLogin(email):
+                #client menu options
+                while True:
+                    print("\n === Client Menu ===")
+                    print("1. View Bookings")
+                    print("2. Update Client Information")
+                    print("3. Submit a Review")
+                    print("4. Logout")
+
+                    client_choice = input("> ").strip()
+                    
+                    if client_choice == "1":
+                        viewBookings(email)
+                    elif client_choice == "2":
+                        new_name = input("Enter new name: ").strip()
+                        
+                        #retrieve new addresses and credit card information
+                        addresses = []
+                        number_addresses = int(input("How many addresses do you want to add? "))
+                        for i in range(number_addresses):
+                            street_name = input("Enter street name: ").strip()
+                            number = input("Enter street number: ").strip()
+                            city = input("Enter city: ").strip()
+                            addresses.append({'street_name': street_name, 'num': number, 'city': city})
+                        
+                        cards = []
+                        number_cards = int(input("How many credit cards do you want to add? "))
+                        for i in range(number_cards):
+                            card_number = input("Enter card number: ").strip()
+                            street_name = input("Enter billing street name: ").strip()
+                            number = input("Enter billing street number: ").strip()
+                            city = input("Enter billing city: ").strip()
+                            cards.append({'credit_card_number': card_number, 'street_name': street_name, 'num': number, 'city': city})
+
+                        updateClientInfo(email, new_name, addresses, cards)
+                        
+                    elif client_choice == "3":
+                        hotel_id = input("Enter hotel ID: ").strip()
+                        rating = int(input("Enter rating (1-10): ").strip())
+                        comment = input("Enter review comment: ").strip()
+                        submitReview(email, hotel_id, rating, comment)
+
+                    elif client_choice == "4":
+                        print("Logging out!")
+                        break
+                    else:
+                        print("Invalid option, try again!")
+            cur.close()
+            conn.close()
+                
         # Exit application. 
         elif choice == "5":
             print("Goodbye!")

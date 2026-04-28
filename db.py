@@ -403,3 +403,145 @@ def automaticBooking():
     if not foundSpecifiedHotel:
         print("No room available at ", chosenHotel, " Here are other hotels that have an available room for date range ", start, "-", end, ": ")
         print(availableHotels)
+
+
+def clientRegister(name, email, addresses, credit_cards):
+    connection = get_connection()
+    cursor = connection.cursor()
+
+    #insert client info into Client table
+    cursor.execute("""INSERT INTO Client (email, name) 
+                   VALUES (%s, %s)""", (email, name))
+
+    #insert the client's addresses into Address table and LivesAt table
+    for address in addresses:
+        cursor.execute("""INSERT INTO Address (street_name, num, city)
+                       VALUES (%s, %s, %s) ON CONFLICT DO NOTHING""", (address['street_name'], address['num'], address['city']))
+        
+        cursor.execute ("""INSERT INTO LivesAt (email, street_name, num, city)
+                        VALUES (%s, %s, %s, %s)""", (email, address['street_name'], address['num'], address['city']))
+                       
+    #insert the client's addresses into Address table and CreditCard table
+    for card in credit_cards:
+        cursor.execute("""INSERT INTO Address (street_name, num, city)
+                       VALUES (%s, %s, %s) ON CONFLICT DO NOTHING""", (card['street_name'], card['num'], card['city']))
+
+        cursor.execute("""INSERT INTO CreditCard (credit_card_number, email, street_name, num, city)
+                       VALUES (%s, %s, %s, %s, %s)""", (card['credit_card_number'], email, card['street_name'], card['num'], card['city']))
+
+    connection.commit()
+    cursor.close()
+    connection.close()
+
+    print("Client is registered!")
+
+
+def clientLogin(email):
+    connection = get_connection()
+    cursor = connection.cursor()
+
+    #checking if the client exists
+    cursor.execute("SELECT name FROM Client WHERE email = %s", (email,))
+    result = cursor.fetchone()
+
+    cursor.close()
+    connection.close()
+
+    if result:
+        print(f"\nWelcome, {result[0]}!")
+        return True
+    else:
+        print("No client found with that email.")
+        return False
+
+
+def updateClientInfo(email, new_name, new_addresses, new_credit_cards):
+    connection = get_connection()
+    cursor = connection.cursor()
+
+    #update the client's name
+    cursor.execute("""UPDATE Client SET name = %s WHERE email = %s""", (new_name, email))
+
+    #delete old addresses and credit cards
+    cursor.execute("""DELETE FROM LivesAt WHERE email = %s""", (email))
+    cursor.execute("""DELETE FROM CreditCard WHERE email = %s""", (email))
+
+    #insert new addresses and credit cards
+    for address in new_addresses:
+        cursor.execute("""INSERT INTO Address (street_name, num, city)
+                       VALUES (%s, %s, %s) ON CONFLICT DO NOTHING""", (address['street_name'], address['num'], address['city']))
+        
+        cursor.execute ("""INSERT INTO LivesAt (email, street_name, num, city)
+                        VALUES (%s, %s, %s, %s)""", (email, address['street_name'], address['num'], address['city']))
+                       
+    for card in new_credit_cards:
+        cursor.execute("""INSERT INTO Address (street_name, num, city)
+                       VALUES (%s, %s, %s) ON CONFLICT DO NOTHING""", (card['street_name'], card['num'], card['city']))
+
+        cursor.execute("""INSERT INTO CreditCard (credit_card_number, email, street_name, num, city)
+                       VALUES (%s, %s, %s, %s, %s)""", (card['credit_card_number'], email, card['street_name'], card['num'], card['city']))
+
+    connection.commit()
+    cursor.close()
+    connection.close()
+
+    print("Client information updated!")
+
+
+def viewAllBookings(email):
+    connection = get_connection()
+    cursor = connection.cursor()
+
+    #fetches all the bookings for the client and calculates the total cost per booking 
+    cursor.execute("""
+        SELECT 
+            b.hotel_id, h.hotel_name, b.room_number, b.start_date,b.end_date,
+            (b.end_date - b.start_date) * b.price_per_day AS total_cost
+        FROM Booking b
+        JOIN Hotel h ON b.hotel_id = h.hotel_id
+        WHERE b.email = %s
+        ORDER BY b.start_date DESC
+        """, (email,)
+    )
+
+    allBookings = cursor.fetchall()
+
+    #displays all the bookings for the client with the total cost for each booking
+    if allBookings:
+        print("\nYour Bookings:")
+        for booking in allBookings:
+            print(f"Hotel ID: {booking[0]}, Hotel Name: {booking[1]}, Room: {booking[2]}, Check-in: {booking[3]}, Check-out: {booking[4]}, Total Cost: ${booking[5]:.2f}")
+    else:
+        print("You have no bookings.")
+
+    cursor.close()
+    connection.close()
+
+
+def submitReview(email, hotel_id, rating, comment):
+    connection = get_connection()
+    cursor = connection.cursor()
+
+    #check if the client booking exists 
+    cursor.execute("""SELECT * FROM Booking WHERE email = %s AND hotel_id = %s LIMIT 1""", (email, hotel_id))
+
+    if cursor.fetchone() is None:
+        print("You have not stayed at this hotel so you cannot submit a review.")
+        cursor.close()
+        connection.close()
+        return
+
+    #create a review_id
+    cursor.execute("""SELECT COALESCE(MAX(review_id), 0) + 1 FROM Review WHERE hotel_id = %s""", (hotel_id,))
+    
+    review_id = cursor.fetchone()[0]
+
+    #insert the client's review into the Review table
+    cursor.execute("""INSERT INTO Review (hotel_id, review_id, review_message, rating)
+                    VALUES (%s, %s, %s, %s)""", (hotel_id, review_id, comment, rating))
+
+    connection.commit()
+    cursor.close()
+    connection.close()
+
+    print("Review submitted!")
