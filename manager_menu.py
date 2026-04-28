@@ -1,0 +1,199 @@
+# This file handles everything a logged in manager can do.
+
+from db import get_connection
+
+def run(ssn):
+    # Passing in ssn so we know which manager has logged in
+    
+    while True:
+        print("\n=== Manager Menu ===")
+        print("1. Add Hotel")
+        print("2. Update Hotel")
+        print("3. Delete Hotel")
+        print("4. Add Room")
+        print("5. Update Room")
+        print("6. Delete Room")
+        print("7. Remove Client")
+        print("8. Back to Main Menu")
+
+        choice = input("> ").strip()
+
+        if choice == "1":
+            addHotel()
+        elif choice == "2":
+            updateHotel()
+        elif choice == "3":
+            deleteHotel()
+        elif choice == "4":
+            addRoom()
+        elif choice == "5":
+            updateRoom()
+        elif choice == "6":
+            deleteRoom()
+        elif choice == "7":
+            removeClient()
+        elif choice == "8":
+            break
+        else:
+            print("Invalid choice, try again.")
+
+# === Hotel Functions ===
+
+def addHotel():
+    hotel_id    = input("Enter hotel ID: ").strip()
+    hotel_name  = input("Enter hotel name: ").strip()
+    street_name = input("Enter street name: ").strip()
+    num         = input("Enter street number: ").strip()
+    city        = input("Enter city: ").strip()
+
+    conn = get_connection()
+    cur  = conn.cursor()
+
+    cur.execute("""
+        INSERT INTO Address (street_name, num, city)
+        VALUES (%s, %s, %s)
+        ON CONFLICT DO NOTHING
+    """, (street_name, num, city))
+
+    cur.execute("""
+        INSERT INTO Hotel (hotel_id, hotel_name, street_name, num, city)
+        VALUES (%s, %s, %s, %s, %s)         
+    """, (hotel_id, hotel_name, street_name, num, city))
+
+    conn.commit()
+
+    cur.close()
+    conn.close()
+    print("Hotel added successfully!")
+
+def updateHotel():
+    hotel_id   = input("Enter hotel ID to update: ").strip()
+    hotel_name = input("Enter new hotel name: ").strip()
+
+    conn = get_connection()
+    cur  = conn.cursor()
+
+    cur.execute("""
+        UPDATE Hotel SET hotel_name = %s
+        WHERE hotel_id = %s
+    """, (hotel_name, hotel_id))
+
+    if cur.rowcount == 0:
+        print("No hotel found with that ID.")
+    else:
+        print("Hotel updated successfully!")
+
+    conn.commit()
+    cur.close()
+    conn.close()
+
+def deleteHotel():
+    hotel_id = input("Enter hotel ID to delete: ").strip()
+
+    conn = get_connection()
+    cur  = conn.cursor()
+
+    cur.execute("""DELETE FROM Hotel WHERE hotel_id = %s""", (hotel_id,))
+
+    if cur.rowcount == 0:
+        print("No hotel found with that ID.")
+    else:
+        print("Hotel deleted succesfully!")
+    
+    conn.commit()
+    cur.close()
+    conn.close()
+
+# === Room Functions ===
+
+def addRoom():
+    hotel_id    = input("Enter hotel ID: ").strip()
+    room_number = input("Enter room number: ").strip()
+    windows     = input("Enter number of windows: ").strip()
+    ren_year    = input("Enter renovation year: ").strip()
+    access      = input("Enter access type (elevator/stairs): ").strip().lower()
+
+    if access not in ("elevator", "stairs"):
+        print("Invalid access tye. Must be 'elevator' or 'stairs'.")
+        return
+    
+    conn = get_connection()
+    cur  = conn.cursor()
+
+    cur.execute(""" 
+        INSERT INTO Room (hotel_id, room_number, windows, renovation_year, access_type)
+        VALUES (%s, %s, %s, %s, %s)
+    """, (hotel_id, room_number, windows, ren_year, access))
+
+    conn.commit()
+    cur.close()
+    conn.close()
+    print("Room added successfully!")
+
+def updateRoom():
+    hotel_id    = input("Enter hotel ID: ").strip()
+    room_number = input("Enter room number: ").strip()
+    windows     = input("Enter number of windows: ").strip()
+    ren_year    = input("Enter renovation year: ").strip()
+    access      = input("Enter access type (elevator/stairs): ").strip().lower()
+
+    if access not in ("elevator", "stairs"):
+        print("Invalid access tye. Must be 'elevator' or 'stairs'.")
+        return
+    
+    conn = get_connection()
+    cur  = conn.cursor()
+
+    cur.execute(""" 
+        UPDATE Room
+        SET windows = %s, renovation_year = %s, access_type = %s
+        WHERE hotel_id = %s AND room_number = %s
+    """, (windows, ren_year, access, hotel_id, room_number))
+
+    if cur.rowcount == 0:
+        print("No room found with that hotel ID and room number.")
+    else:
+        print("Room updated successfully!")
+
+    conn.commit()
+    cur.close()
+    conn.close()
+
+def deleteRoom():
+    hotel_id    = input("Enter hotel ID: ").strip()
+    room_number = input("Enter room number to delete: ").strip()
+
+    conn = get_connection()
+    cur  = conn.cursor()
+
+    cur.execute("""
+        DELETE FROM Room
+        WHERE hotel_id = %s AND room_number = %s
+    """, (hotel_id, room_number))
+
+    if cur.rowcount == 0:
+        print("No room found with that hotel ID and room number.")
+    else:
+        print("Room deleted successfully!")
+
+    conn.commit()
+    cur.close()
+    conn.close()
+
+# === Remove Client ===
+def removeClient():
+    email = input("Enter client email to remove: ").strip()
+
+    conn = get_connection()
+    cur  = conn.cursor()
+
+    cur.execute("DELETE FROM Client WHERE email = %s", (email,))
+
+    if cur.rowcount == 0:
+        print("No client found with that email.")
+    else:
+        print("Client removed successfully")
+
+    conn.commit()
+    cur.close()
+    conn.close()
