@@ -41,13 +41,21 @@ def run(ssn):
 
 def addHotel():
     hotel_id    = input("Enter hotel ID: ").strip()
+    # check if hotel ID already exists
+    conn = get_connection()
+    cur  = conn.cursor()
+
+    cur.execute("""SELECT * FROM Hotel WHERE hotel_id = %s""", (hotel_id,))
+    if cur.fetchone() is not None:
+        print("Try again! A hotel with this ID already exists.")
+        cur.close()
+        conn.close()
+        return
+    
     hotel_name  = input("Enter hotel name: ").strip()
     street_name = input("Enter street name: ").strip()
     num         = input("Enter street number: ").strip()
     city        = input("Enter city: ").strip()
-
-    conn = get_connection()
-    cur  = conn.cursor()
 
     cur.execute("""
         INSERT INTO Address (street_name, num, city)
@@ -133,6 +141,21 @@ def addRoom():
 def updateRoom():
     hotel_id    = input("Enter hotel ID: ").strip()
     room_number = input("Enter room number: ").strip()
+
+    #check if hotel_id and room_number combination exists
+    conn = get_connection()
+    cur  = conn.cursor()
+    cur.execute("""
+        SELECT * FROM Room
+        WHERE hotel_id = %s AND room_number = %s
+        """, (hotel_id, room_number))
+    
+    if cur.fetchone() is None:
+        print("No room found with that hotel ID and room number.")
+        cur.close()
+        conn.close()
+        return
+
     windows     = input("Enter number of windows: ").strip()
     ren_year    = input("Enter renovation year: ").strip()
     access      = input("Enter access type (elevator/stairs): ").strip().lower()
@@ -140,9 +163,6 @@ def updateRoom():
     if access not in ("elevator", "stairs"):
         print("Invalid access tye. Must be 'elevator' or 'stairs'.")
         return
-    
-    conn = get_connection()
-    cur  = conn.cursor()
 
     cur.execute(""" 
         UPDATE Room
@@ -187,7 +207,11 @@ def removeClient():
     conn = get_connection()
     cur  = conn.cursor()
 
-    cur.execute("DELETE FROM Client WHERE email = %s", (email,))
+    cur.execute("""DELETE FROM Lives_At WHERE email = %s""", (email,))
+    cur.execute("""DELETE FROM CreditCard WHERE email = %s""", (email,))
+    cur.execute("""DELETE FROM Booking WHERE email = %s""", (email,))
+
+    cur.execute("""DELETE FROM Client WHERE email = %s""", (email,))
 
     if cur.rowcount == 0:
         print("No client found with that email.")

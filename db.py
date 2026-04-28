@@ -17,6 +17,15 @@ def get_connection():
 def managerRegister(name, ssn, email):
     connection = get_connection()
     cursor = connection.cursor()
+
+    # check if ssn already exists
+    cursor.execute("""SELECT * FROM managers WHERE ssn = %s""", (ssn,))
+    if cursor.fetchone() is not None:
+        print("Try again! A manager with this SSN already exists.")
+        cursor.close()
+        connection.close()
+        return
+
     cursor.execute("""INSERT INTO managers (ssn, full_name, email) VALUES (%s, %s, %s)""", (ssn, name, email))
     connection.commit()
     cursor.close()
@@ -420,7 +429,7 @@ def clientRegister(name, email, addresses, credit_cards):
         cursor.execute("""INSERT INTO Address (street_name, num, city)
                        VALUES (%s, %s, %s) ON CONFLICT DO NOTHING""", (address['street_name'], address['num'], address['city']))
         
-        cursor.execute ("""INSERT INTO LivesAt (email, street_name, num, city)
+        cursor.execute ("""INSERT INTO Lives_At (email, street_name, num, city)
                         VALUES (%s, %s, %s, %s)""", (email, address['street_name'], address['num'], address['city']))
                        
     #insert the client's addresses into Address table and CreditCard table
@@ -465,15 +474,15 @@ def updateClientInfo(email, new_name, new_addresses, new_credit_cards):
     cursor.execute("""UPDATE Client SET name = %s WHERE email = %s""", (new_name, email))
 
     #delete old addresses and credit cards
-    cursor.execute("""DELETE FROM LivesAt WHERE email = %s""", (email))
-    cursor.execute("""DELETE FROM CreditCard WHERE email = %s""", (email))
+    cursor.execute("""DELETE FROM Lives_At WHERE email = %s""", (email,))
+    cursor.execute("""DELETE FROM CreditCard WHERE email = %s""", (email,))
 
     #insert new addresses and credit cards
     for address in new_addresses:
         cursor.execute("""INSERT INTO Address (street_name, num, city)
                        VALUES (%s, %s, %s) ON CONFLICT DO NOTHING""", (address['street_name'], address['num'], address['city']))
         
-        cursor.execute ("""INSERT INTO LivesAt (email, street_name, num, city)
+        cursor.execute ("""INSERT INTO Lives_At (email, street_name, num, city)
                         VALUES (%s, %s, %s, %s)""", (email, address['street_name'], address['num'], address['city']))
                        
     for card in new_credit_cards:
@@ -520,7 +529,7 @@ def viewAllBookings(email):
     connection.close()
 
 
-def submitReview(email, hotel_id, rating, comment):
+def submitReview(email, hotel_id):
     connection = get_connection()
     cursor = connection.cursor()
 
@@ -532,6 +541,9 @@ def submitReview(email, hotel_id, rating, comment):
         cursor.close()
         connection.close()
         return
+
+    rating = int(input("Enter rating (1-10): ").strip())
+    comment = input("Enter review comment: ").strip()
 
     #create a review_id
     cursor.execute("""SELECT COALESCE(MAX(review_id), 0) + 1 FROM Review WHERE hotel_id = %s""", (hotel_id,))
