@@ -1,6 +1,7 @@
 import psycopg2
 import os
 from dotenv import load_dotenv
+from datetime import datetime
 
 load_dotenv()
 
@@ -225,17 +226,180 @@ def totalAmountSpent():
         print("Client's name:", i[0])
         print("Total amount spent:", i[1])
         print("-------------------------")
-        
+
+
+
+# check if date format is correct
+def checkDateInput(actualDate, correctFormat):
+    try:
+        datetime.strptime(actualDate, correctFormat)
+        return True
+    except ValueError:
+        return False
+
+# get input of a start and ending date to check room availability
+def inputDatesBooking():
+    # get date input
+    inputStartDate = input("Enter Start Date (yyyy-mm-dd): ")
+    inputEndDate = input("Enter End Date (yyyy-mm-dd): ")
+
+    correctFormat = "%Y-%m-%d"
+    checkStart = checkDateInput(inputStartDate, correctFormat)
+    checkEnd = checkDateInput(inputEndDate, correctFormat)
+
+    # continue to ask for input until user inputs a correct format
+    while not (checkStart and checkEnd) or inputEndDate < inputStartDate:
+        print("Try again. Incorrect input of date/s")
+        inputStartDate = input("Enter Start Date (yyyy-mm-dd): ")
+        inputEndDate = input("Enter End Date (yyyy-mm-dd): ")
+       
+        checkStart = checkDateInput(inputStartDate, correctFormat)
+        checkEnd = checkDateInput(inputEndDate, correctFormat)
+
+    return inputStartDate, inputEndDate
+
+# find all available rooms based on inputted dates
 def findAvailableRooms():
-    inputStartDate = input("Enter Start Date (mm/dd/yyyy): ")
-    inputEndDate = input("Enter End Date (mm/dd/yyyy): ")
+    inputStartDate, inputEndDate = inputDatesBooking()
 
-    return
+    inputStartDate = datetime.strptime(inputStartDate, "%Y-%m-%d").date()
+    inputEndDate = datetime.strptime(inputEndDate, "%Y-%m-%d").date()
 
-#client books specific room based on date range
+    # get all available hotel rooms based on date range
+    connection = get_connection()
+    cursor = connection.cursor()
+    cursor.execute("""
+        SELECT r.room_number, h.hotel_name, h.hotel_id
+        FROM Room r
+        JOIN Hotel h ON r.hotel_id = h.hotel_id
+        WHERE NOT EXISTS (
+            SELECT 1
+            FROM Booking b 
+            WHERE b.hotel_id = r.hotel_id
+            AND b.room_number = r.room_number
+            AND b.start_date <= %s
+            AND b.end_date >= %s 
+        )
+    """, (inputEndDate, inputStartDate))
+    
+    results = cursor.fetchall()
+    cursor.close()
+    connection.close()
+    
+    return results, inputStartDate, inputEndDate
+
+# print available rooms for specified dates
+def printAvailableRooms():
+    availableRooms, _, _ = findAvailableRooms()
+
+    print("All available rooms for inputted time range: ")
+    for room in availableRooms: 
+        print("Room #: ", room[0], " Hotel: ", room[1])
+
+# client books specific room based on date range
 def bookSpecificRoom():
+    # first get input of specific room
+    chosenHotel = input("Enter Hotel Name: ")
+    chosenRoom = int(input("Enter Room number: "))
+    
+    # then see if the room is available
+    availableRooms, start, end = findAvailableRooms()
 
-    return
+    pairingAvailableOrValid = False
 
+    # check if room and hotel pairing are available/exists
+    for room in availableRooms:
+        if room[0] == chosenRoom and room[1] == chosenHotel:
+            pairingAvailableOrValid = True
+            break
+    
+    # either room pairing is available/exists or does not
+    if not pairingAvailableOrValid:
+        print("Room either not available or does not exist")
+    else:
+        print("Room available for booking!")
+        
+        connection = get_connection()
+        cursor = connection.cursor()
+
+        # get hotel id
+        cursor.execute("""
+            SELECT hotel_id
+            FROM HOTEL
+            WHERE hotel_name = %s
+        """, (chosenHotel,))
+
+        hotel = cursor.fetchone()
+
+        if not hotel:
+            print("Hotel not found.")
+            cursor.close()
+            connection.close()
+            return
+        
+        hotelId = hotel[0]
+        pricePerDay = 150
+       
+        # get client info
+        currentClientEmail = "" #replace later with whatever clients email is
+
+        # create booking
+        cursor.execute("""
+            INSERT INTO Booking (email, hotel_id, room_number, start_date, end_date, price_per_day)
+            VALUES (%s,%s,%s,%s,%s,%s)
+        """, (currentClientEmail,hotelId, chosenRoom, start, end, pricePerDay))
+
+        connection.commit()
+
+        cursor.close()
+        connection.close()
+        print("Room booked successfully!")
+
+# automatic booking of room
 def automaticBooking():
-    return
+    # get hotel name
+    chosenHotel = input("Enter Hotel Name: ")
+    
+    # enter date range and find all available rooms
+    availableRooms, start, end = findAvailableRooms()
+    
+    if len(availableRooms) == 0:
+        print("No room available for this date range at any hotel")
+        return
+    
+    foundSpecifiedHotel = False
+    
+    availableHotels = set()
+    chosenRoomNum = -1
+
+    connection = get_connection()
+    cursor = connection.cursor()
+
+    # look for available rooms at specified hotel and date
+    for room in availableRooms:
+        availableHotels.add(room[1])
+        if room[1] == chosenHotel:
+            foundSpecifiedHotel = True
+            # create a booking for a room
+            pricePerDay = 150
+       
+            # get client info
+            currentClientEmail = "" #replace later with whatever clients email is
+            hotelId = room[2]
+            chosenRoomNum = room[0]
+
+            # automatically create booking
+            cursor.execute("""
+                INSERT INTO Booking (email, hotel_id, room_number, start_date, end_date, price_per_day)
+                VALUES (%s,%s,%s,%s,%s,%s)
+            """, (currentClientEmail, hotelId, chosenRoomNum, start, end, pricePerDay))
+            connection.commit()
+
+            print("Room number: ", chosenRoomNum, "at ", chosenHotel, " booked sucessfully for date range: ", start, "-", end)
+            break
+    cursor.close()
+    connection.close()
+    
+    if not foundSpecifiedHotel:
+        print("No room available at ", chosenHotel, " Here are other hotels that have an available room for date range ", start, "-", end, ": ")
+        print(availableHotels)

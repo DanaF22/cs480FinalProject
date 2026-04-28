@@ -61,7 +61,7 @@ CREATE TABLE CreditCard (
 );
 
 CREATE TABLE Booking (
-    booking_id INT,
+    booking_id SERIAL,
     email VARCHAR(100) NOT NULL,
     hotel_id INT NOT NULL,
     room_number INT NOT NULL,
