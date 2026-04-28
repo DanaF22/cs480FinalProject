@@ -1,7 +1,7 @@
 # This file serves as the main menu where managers 
 # and clients can either register or login
 
-from db import get_connection, managerRegister, clientRegister, clientLogin, updateClientInfo, viewBookings, submitReview
+from db import get_connection, managerRegister, clientRegister, clientLogin, updateClientInfo, viewBookings, submitReview,printAvailableRooms,bookSpecificRoom,automaticBooking
 import manager_menu
 
 def main():
@@ -79,7 +79,10 @@ def main():
                     print("1. View Bookings")
                     print("2. Update Client Information")
                     print("3. Submit a Review")
-                    print("4. Logout")
+                    print("4. View available rooms for given date range")
+                    print("5. Book specific room for given date range")
+                    print("6. Automatic booking at Hotel for given date range")
+                    print("7. Logout")
 
                     client_choice = input("> ").strip()
                     
@@ -113,8 +116,13 @@ def main():
                         rating = int(input("Enter rating (1-10): ").strip())
                         comment = input("Enter review comment: ").strip()
                         submitReview(email, hotel_id, rating, comment)
-
                     elif client_choice == "4":
+                        printAvailableRooms()
+                    elif client_choice == "5":
+                        bookSpecificRoom(email)
+                    elif client_choice == "6":
+                        automaticBooking(email)
+                    elif client_choice == "7":
                         print("Logging out!")
                         break
                     else:

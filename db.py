@@ -292,12 +292,18 @@ def findAvailableRooms():
 def printAvailableRooms():
     availableRooms, _, _ = findAvailableRooms()
 
-    print("All available rooms for inputted time range: ")
+    # if there are no avaialble rooms
+    if len(availableRooms) == 0:
+        print("No available rooms for requested date range")
+        return
+    
+    print("All available rooms for inputted date range: ")
+    
     for room in availableRooms: 
         print("Room #: ", room[0], " Hotel: ", room[1])
 
 # client books specific room based on date range
-def bookSpecificRoom():
+def bookSpecificRoom(email):
     # first get input of specific room
     chosenHotel = input("Enter Hotel Name: ")
     chosenRoom = int(input("Enter Room number: "))
@@ -340,14 +346,11 @@ def bookSpecificRoom():
         hotelId = hotel[0]
         pricePerDay = 150
        
-        # get client info
-        currentClientEmail = "" #replace later with whatever clients email is
-
         # create booking
         cursor.execute("""
             INSERT INTO Booking (email, hotel_id, room_number, start_date, end_date, price_per_day)
             VALUES (%s,%s,%s,%s,%s,%s)
-        """, (currentClientEmail,hotelId, chosenRoom, start, end, pricePerDay))
+        """, (email,hotelId, chosenRoom, start, end, pricePerDay))
 
         connection.commit()
 
@@ -356,7 +359,7 @@ def bookSpecificRoom():
         print("Room booked successfully!")
 
 # automatic booking of room
-def automaticBooking():
+def automaticBooking(email):
     # get hotel name
     chosenHotel = input("Enter Hotel Name: ")
     
@@ -384,7 +387,6 @@ def automaticBooking():
             pricePerDay = 150
        
             # get client info
-            currentClientEmail = "" #replace later with whatever clients email is
             hotelId = room[2]
             chosenRoomNum = room[0]
 
@@ -392,7 +394,7 @@ def automaticBooking():
             cursor.execute("""
                 INSERT INTO Booking (email, hotel_id, room_number, start_date, end_date, price_per_day)
                 VALUES (%s,%s,%s,%s,%s,%s)
-            """, (currentClientEmail, hotelId, chosenRoomNum, start, end, pricePerDay))
+            """, (email, hotelId, chosenRoomNum, start, end, pricePerDay))
             connection.commit()
 
             print("Room number: ", chosenRoomNum, "at ", chosenHotel, " booked sucessfully for date range: ", start, "-", end)
