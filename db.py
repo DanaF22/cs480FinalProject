@@ -210,7 +210,7 @@ def totalAmountSpent():
     cursor = connection.cursor()
     cursor.execute("""
     WITH calcInfo as(
-        SELECT c.email, c.name, hotel_id, room_number, b.price_per_day, end_date-start_date AS days
+        SELECT c.email, c.name, hotel_id, room_number, b.price_per_day, end_date - start_date AS days
         FROM Client c
         JOIN Booking b
         ON c.email = b.email
@@ -517,7 +517,7 @@ def viewAllBookings(email):
     cursor.execute("""
         SELECT 
             b.hotel_id, h.hotel_name, b.room_number, b.start_date,b.end_date,
-            (b.end_date - b.start_date) * b.price_per_day AS total_cost
+            GREATEST(b.end_date - b.start_date,1) * b.price_per_day AS total_cost
         FROM Booking b
         JOIN Hotel h ON b.hotel_id = h.hotel_id
         WHERE b.email = %s
