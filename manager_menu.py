@@ -115,8 +115,27 @@ def deleteHotel():
 # === Room Functions ===
 
 def addRoom():
+    conn = get_connection()
+    cur  = conn.cursor()
+
     hotel_id    = input("Enter hotel ID: ").strip()
+
+    cur.execute("""SELECT * FROM Hotel WHERE hotel_id = %s""", (hotel_id,))
+    if cur.fetchone() is None:
+        print("Try again! A hotel with this id does not exist.")
+        cur.close()
+        conn.close()
+        return
+
     room_number = input("Enter room number: ").strip()
+
+    cur.execute("""SELECT * FROM Room WHERE hotel_id = %s AND room_number = %s""", (hotel_id,room_number))
+    if cur.fetchone() is not None:
+        print("Try again! This room number in this hotel already exists.")
+        cur.close()
+        conn.close()
+        return
+
     windows     = input("Enter number of windows: ").strip()
     ren_year    = input("Enter renovation year: ").strip()
     access      = input("Enter access type (elevator/stairs): ").strip().lower()
@@ -125,9 +144,6 @@ def addRoom():
         print("Invalid access tye. Must be 'elevator' or 'stairs'.")
         return
     
-    conn = get_connection()
-    cur  = conn.cursor()
-
     cur.execute(""" 
         INSERT INTO Room (hotel_id, room_number, windows, renovation_year, access_type)
         VALUES (%s, %s, %s, %s, %s)

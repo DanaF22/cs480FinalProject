@@ -1,1 +1,3 @@
-SELECT * FROM Client;
+-- SELECT * FROM room;
+SELECT * FROM hotel;
+-- SELECT * FROM managers;

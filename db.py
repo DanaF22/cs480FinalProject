@@ -1,13 +1,14 @@
 import psycopg2
 import os
 from dotenv import load_dotenv
-from datetime import datetime
+from datetime import datetime, date
 
 load_dotenv()
 
 def get_connection():
     return psycopg2.connect(
         host="localhost",
+        # database="cs480FinalProject",
         database="cs480Project",
         user=os.getenv("DB_USER"),
         password=os.getenv("DB_PASSWORD")
@@ -255,15 +256,24 @@ def inputDatesBooking():
     correctFormat = "%Y-%m-%d"
     checkStart = checkDateInput(inputStartDate, correctFormat)
     checkEnd = checkDateInput(inputEndDate, correctFormat)
+    today = date.today()
+
+    convertedStartDate = datetime.strptime(inputStartDate, correctFormat).date()
+    convertedEndDate = datetime.strptime(inputEndDate, correctFormat).date()
+
 
     # continue to ask for input until user inputs a correct format
-    while not (checkStart and checkEnd) or inputEndDate < inputStartDate:
+    while not (checkStart and checkEnd) or inputEndDate < inputStartDate or (convertedStartDate < today or convertedEndDate < today):
         print("Try again. Incorrect input of date/s")
         inputStartDate = input("Enter Start Date (yyyy-mm-dd): ")
         inputEndDate = input("Enter End Date (yyyy-mm-dd): ")
        
         checkStart = checkDateInput(inputStartDate, correctFormat)
         checkEnd = checkDateInput(inputEndDate, correctFormat)
+
+        convertedStartDate = datetime.strptime(inputStartDate, correctFormat).date()
+        convertedEndDate = datetime.strptime(inputEndDate, correctFormat).date()
+
 
     return inputStartDate, inputEndDate
 
