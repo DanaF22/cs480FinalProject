@@ -1,12 +1,15 @@
 # This file handles everything a logged in manager can do.
 
-from db import get_connection
+from db import (get_connection, topClients, listOfRooms,
+                listOfHotels, twoCities, problematicHotels,
+                totalAmountSpent)
 
 def run(ssn):
     # Passing in ssn so we know which manager has logged in
     
     while True:
         print("\n=== Manager Menu ===")
+        print("--- Hotel & Room Managment ---")
         print("1. Add Hotel")
         print("2. Update Hotel")
         print("3. Delete Hotel")
@@ -14,7 +17,15 @@ def run(ssn):
         print("5. Update Room")
         print("6. Delete Room")
         print("7. Remove Client")
-        print("8. Back to Main Menu")
+        print("--- Reports ---")
+        print("8. Top-K Clients by Bookings")
+        print("9. List All Rooms & Booking Count")
+        print("10. Hotel Stats (Booking & Avg Rating)")
+        print("11. Clients in City C1 who Booked in City C2")
+        print("12. Problematic Chicago Hotels")
+        print("13. Client Total Spending")
+        print("--- ")
+        print("14. Back to Main Menu")
 
         choice = input("> ").strip()
 
@@ -33,6 +44,21 @@ def run(ssn):
         elif choice == "7":
             removeClient()
         elif choice == "8":
+            k = input("Enter k: ").strip()
+            topClients(int(k))
+        elif choice == "9":
+            listOfRooms()
+        elif choice == "10":
+            listOfHotels()
+        elif choice == "11":
+            c1 = input("Enter City 1: ").strip()
+            c2 = input("Enter City 2: ").strip()
+            twoCities(c1, c2)
+        elif choice == "12":
+            problematicHotels()
+        elif choice == "13":
+            totalAmountSpent()
+        elif choice == "14":
             break
         else:
             print("Invalid choice, try again.")
