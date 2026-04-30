@@ -1,3 +1,18 @@
 -- SELECT * FROM room;
-SELECT * FROM hotel;
+-- SELECT * FROM Hotel;
+-- SELECT * FROM Booking;
+-- SELECT * FROM Client;
+-- SELECT * FROM Address;
+-- SELECT * FROM Lives_At;
+-- SELECT * FROM CreditCard;
+-- SELECT * FROM Review;
 -- SELECT * FROM managers;
+
+-- DROP TABLE Booking;
+-- DROP TABLE Hotel;
+-- DROP TABLE Room;
+-- DROP TABLE Client;
+-- DROP TABLE Address;
+-- DROP TABLE Lives_At;
+-- DROP TABLE CreditCard;
+-- DROP TABLE Review;

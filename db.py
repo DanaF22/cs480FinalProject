@@ -8,8 +8,8 @@ load_dotenv()
 def get_connection():
     return psycopg2.connect(
         host="localhost",
-        # database="cs480FinalProject",
-        database="cs480Project",
+        database="cs480FinalProject",
+        # database="cs480Project",
         user=os.getenv("DB_USER"),
         password=os.getenv("DB_PASSWORD")
     )
