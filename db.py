@@ -258,21 +258,24 @@ def inputDatesBooking():
     checkEnd = checkDateInput(inputEndDate, correctFormat)
     today = date.today()
 
-    convertedStartDate = datetime.strptime(inputStartDate, correctFormat).date()
-    convertedEndDate = datetime.strptime(inputEndDate, correctFormat).date()
-
-
     # continue to ask for input until user inputs a correct format
-    while not (checkStart and checkEnd) or inputEndDate < inputStartDate or (convertedStartDate < today or convertedEndDate < today):
+    while not (checkStart and checkEnd) or inputEndDate < inputStartDate:
         print("Try again. Incorrect input of date/s")
+        
+        if checkStart and checkEnd:
+            convertedStartDate = datetime.strptime(inputStartDate, correctFormat).date()
+            convertedEndDate = datetime.strptime(inputEndDate, correctFormat).date()
+
+            if (convertedStartDate < today or convertedEndDate < today):
+                print("Try again. Incorrect input of date/s")
+                continue
+        
         inputStartDate = input("Enter Start Date (yyyy-mm-dd): ")
         inputEndDate = input("Enter End Date (yyyy-mm-dd): ")
        
         checkStart = checkDateInput(inputStartDate, correctFormat)
         checkEnd = checkDateInput(inputEndDate, correctFormat)
 
-        convertedStartDate = datetime.strptime(inputStartDate, correctFormat).date()
-        convertedEndDate = datetime.strptime(inputEndDate, correctFormat).date()
 
 
     return inputStartDate, inputEndDate
